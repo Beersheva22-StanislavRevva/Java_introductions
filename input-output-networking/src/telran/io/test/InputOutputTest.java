@@ -1,6 +1,9 @@
 package telran.io.test;
 import java.io.*;
 import java.nio.file.*;
+
+import javax.imageio.IIOException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.*;
@@ -30,7 +33,7 @@ String directoryName = "myDirectory1/myDirectory2";
 	
 	void printDirectoryFile(String path, int maxLevel) {
 		File folder = new File (path);
-		System.out.println(folder.getName());
+		System.out.println(folder.getName() + " - root"); 
 		printDirectoryFile(path, maxLevel, 1);
 	}
 	
@@ -53,7 +56,11 @@ String directoryName = "myDirectory1/myDirectory2";
 		} 
 	}
 	private void printFileName(File folder, int currentLevel) {
-		 System.out.printf("%s%s\n", "	".repeat(currentLevel), folder.getName());
+		if(folder.isDirectory()) { 
+		 System.out.printf("%s%s - dir \n", "	".repeat(currentLevel), folder.getName());
+		} else {
+			System.out.printf("%s%s - file \n", "	".repeat(currentLevel), folder.getName());
+		}
 	}
 
 	
@@ -67,7 +74,7 @@ String directoryName = "myDirectory1/myDirectory2";
 		printDirectoryFiles("C:\\Users\\revva\\git\\input-output-networking\\input-output-networking",4);
 	}
 	void printDirectoryFiles(String path, int maxLevel) {
-		System.out.println(Path.of(path).getFileName());
+		System.out.println(Path.of(path).getFileName() + " - root");
 		printDirectoryFiles(path, maxLevel, 1);
 	}
 	void printDirectoryFiles(String path, int maxLevel,int currentLevel) {
@@ -96,8 +103,11 @@ String directoryName = "myDirectory1/myDirectory2";
 	}
 	
 	private void printFilesName(Object file, int currentLevel) {
-		System.out.printf("%s%s\n", "	".repeat(currentLevel), Path.of(file.toString()).getFileName());
-		
+		if(Files.isDirectory(Path.of(file.toString()))) {
+		System.out.printf("%s%s - dir \n", "	".repeat(currentLevel), Path.of(file.toString()).getFileName());
+		} else {
+			System.out.printf("%s%s - file \n", "	".repeat(currentLevel), Path.of(file.toString()).getFileName());	
+		}
 	}
 	
 }
