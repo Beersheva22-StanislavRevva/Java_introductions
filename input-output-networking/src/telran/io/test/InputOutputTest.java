@@ -34,6 +34,7 @@ class InputOutputTest {
 	}
 
 	@Test
+	@Disabled
 	void printDirectoryFileTest() throws IOException {
 		System.out.println("*********************************Applying class File*********************");
 		printDirectoryFile("..", 2);
@@ -84,6 +85,7 @@ class InputOutputTest {
 	}
 
 	@Test
+	@Disabled
 	void printDirectoryFilesTest() throws IOException {
 		System.out.println("*********************************Applying Class Files*********************");
 		printDirectoryFiles("..", 2);

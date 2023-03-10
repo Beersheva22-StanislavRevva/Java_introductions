@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -20,13 +19,10 @@ public class BufferCopy extends Copy {
 	}
 
 	@Override
-	long copy() throws FileAlreadyExistsException {
+	long copy() {
+		long res = 0;
 		byte[] buffer = new byte[bufferSize];
 		int count;
-		long start = System.nanoTime();
-		if (Files.exists(Path.of(destFilePass)) && !overwrite) {
-			throw new FileAlreadyExistsException(destFilePass);
-		}
 		try (InputStream input = new FileInputStream(srcFilePass); 
 				OutputStream output = new FileOutputStream(destFilePass);
 			)
@@ -36,8 +32,12 @@ public class BufferCopy extends Copy {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		long stop = System.nanoTime() - start;
-		return stop;
+		try {
+			res = Files.size(Path.of(destFilePass));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return res;
 		
 	}
 

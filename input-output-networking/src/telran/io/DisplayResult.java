@@ -11,7 +11,7 @@ public DisplayResult (long fileSize, long copyTime) {
 }
 
 public String toString() {
-	String res = "fileSize - " + Long.toString(fileSize) + ", copyTime" + Long.toString(copyTime);
+	String res = "fileSize - " + Long.toString(fileSize / 1_048_576) + " MB, copyTime - " + Long.toString(copyTime / 1_000_000) + " ms";
 	return res;
 }
 

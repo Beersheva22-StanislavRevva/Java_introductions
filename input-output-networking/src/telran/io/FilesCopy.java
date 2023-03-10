@@ -3,6 +3,8 @@ package telran.io;
 import java.io.*;
 import java.nio.file.*;
 
+import org.junit.jupiter.api.DisplayNameGenerator.Standard;
+
 
 public class FilesCopy extends Copy {
 
@@ -11,21 +13,22 @@ public class FilesCopy extends Copy {
 	}
 
 	@Override
-	long copy() throws FileAlreadyExistsException {
-		long start = System.nanoTime();
-		if (Files.exists(Path.of(destFilePass)) && !overwrite) {
-			throw new FileAlreadyExistsException(destFilePass);
-		} try {Files.copy(Path.of(srcFilePass), Path.of(destFilePass));
-					}  catch (IOException e) {
-							e.printStackTrace();
-						}
-			
-	long stop = System.nanoTime() - start;
-	return stop;
+	long copy()	{
+		long res = 0;
+		try {Files.copy(Path.of(srcFilePass), Path.of(destFilePass), StandardCopyOption.REPLACE_EXISTING);
+		}  catch (IOException e) {
+			e.printStackTrace();
+			}
+		try {
+			res = Files.size(Path.of(destFilePass));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		return res;
 	}
 
 	@Override
-	DisplayResult getDisplayResult(long copyTime, long fileSize) {
+	DisplayResult getDisplayResult(long fileSize, long copyTime) {
 		DisplayResult displayResult = new DisplayResult(copyTime, fileSize);
 		return displayResult;
 	}

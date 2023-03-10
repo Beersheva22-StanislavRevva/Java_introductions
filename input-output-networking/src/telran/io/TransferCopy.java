@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -16,23 +15,24 @@ public class TransferCopy extends Copy {
 		}
 
 	@Override
-	long copy() throws FileAlreadyExistsException {
-		long start = System.nanoTime();
-		if (Files.exists(Path.of(destFilePass)) && !overwrite) {
-			throw new FileAlreadyExistsException(destFilePass);
-		}
+	long copy() {
+		long res = 0;
 		try (InputStream input = new FileInputStream(srcFilePass); 
-				OutputStream output = new FileOutputStream(destFilePass);) {
-			input.transferTo(output);
+			OutputStream output = new FileOutputStream(destFilePass);) {
+				input.transferTo(output);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		long stop = System.nanoTime() - start;
-		return stop;
+		try {
+			res = Files.size(Path.of(destFilePass));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return res;
 	}
 
 	@Override
-	DisplayResult getDisplayResult(long copyTime, long fileSize) {
+	DisplayResult getDisplayResult(long fileSize, long copyTime) {
 		DisplayResult displayResult = new DisplayResult(copyTime, fileSize);
 		return displayResult;
 	}
