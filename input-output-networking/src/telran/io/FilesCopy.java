@@ -1,36 +1,32 @@
 package telran.io;
 
-import java.io.*;
-import java.nio.file.*;
-
-import org.junit.jupiter.api.DisplayNameGenerator.Standard;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class FilesCopy extends Copy {
 
-	public FilesCopy(String srcFilePass, String destFilePass, boolean overwrite) {
-		super(srcFilePass, destFilePass, overwrite);
+	public FilesCopy(String srcFilePath, String destFilePath, boolean overwrite) {
+		super(srcFilePath, destFilePath, overwrite);
 	}
 
 	@Override
-	long copy()	{
-		long res = 0;
-		try {Files.copy(Path.of(srcFilePass), Path.of(destFilePass), StandardCopyOption.REPLACE_EXISTING);
-		}  catch (IOException e) {
-			e.printStackTrace();
-			}
+	public long copy() {
+		Path src = Path.of(srcFilePath);
+		Path dest = Path.of(destFilePath);
 		try {
-			res = Files.size(Path.of(destFilePass));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		return res;
+			Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
+			return Files.size(src);
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage());
+		}
+		
 	}
 
 	@Override
-	DisplayResult getDisplayResult(long fileSize, long copyTime) {
-		DisplayResult displayResult = new DisplayResult(copyTime, fileSize);
-		return displayResult;
+	public DisplayResult getDisplayResult(long copyTime, long fileSize) {
+		return new DisplayResult(fileSize, copyTime);
 	}
-	
+
 }

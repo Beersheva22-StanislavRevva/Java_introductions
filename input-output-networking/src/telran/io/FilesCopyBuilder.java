@@ -1,32 +1,45 @@
 package telran.io;
 
 public class FilesCopyBuilder {
+	
+	private static final String FILES_COPY = "FilesCopy";
+	private static final String TRANSFER_COPY = "TransferCopy";
+	private static final String BUFFER_COPY = "BufferCopy";
+	private static final String OVERWRITE = "overwrite";
 
-	final String filesCopy = "FilesCopy";
-	final String transferCopy = "TransferCopy";
-	final String bufferCopy = "BufferCopy";
-	
-	
-	public Copy build (String type, String[] args) throws Exception {
+	public Copy build(String type, String[] args) {
 		if (args.length < 2) {
-			throw new Exception ("Not enough args");
+			throw new IllegalArgumentException("too few arguments");
 		}
-		String srcFilePass = args [0];
-		String destFilePass = args [1];
-		boolean overwrite = false;
-		int bufferSize = 1_000_000;
-		if (args.length > 2 && args[2].equalsIgnoreCase("true")) {
-			overwrite = true;
-		}
-		if (args.length > 3) {
-			bufferSize = Integer.parseInt(args[3]);
-		}
+		String srcFilePath = args[0];
+		String destFilePath = args[1];
+		boolean overwrite = getOverwriteValue(args);
+		
+		
 		return switch (type) {
-			case filesCopy -> new FilesCopy(srcFilePass, destFilePass, overwrite);
-			case transferCopy -> new FilesCopy(srcFilePass, destFilePass, overwrite);
-			case bufferCopy -> new BufferCopy(srcFilePass, destFilePass, overwrite, bufferSize);
-			default -> throw new IllegalArgumentException("Unexpected value: " + type);
+			case FILES_COPY -> new FilesCopy(srcFilePath, destFilePath, overwrite); 
+			case TRANSFER_COPY -> new TransferCopy(srcFilePath, destFilePath, overwrite);
+			case BUFFER_COPY ->new BufferCopy(srcFilePath, destFilePath, overwrite,
+					getBufferSizeValue(args));
+			default -> throw new IllegalArgumentException(type + " is not supported copying implementation");
 		};
 	}
-	
+
+	private int getBufferSizeValue(String[] args) {
+		int res = 1_000_000;
+		if (args.length > 3) {
+			try {
+				res = Integer.parseInt(args[3]);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Buffer Size must be an integer number");
+			}
+		}
+		
+		return res;
+	}
+
+	private boolean getOverwriteValue(String[] args) {
+		
+		return args.length > 2 && args[2].equalsIgnoreCase(OVERWRITE);
+	}
 }

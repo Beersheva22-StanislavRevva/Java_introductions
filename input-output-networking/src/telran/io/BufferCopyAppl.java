@@ -1,16 +1,15 @@
 package telran.io;
 
 public class BufferCopyAppl {
-	private static final String type = "BufferCopy";
+	private static final String BUFFER_COPY = "BufferCopy";
 
-	public static void main (String[] args) {
-		FilesCopyBuilder builder = new FilesCopyBuilder();
+	public static void main(String[] args) {
 		try {
-			Copy copy = builder.build(type, args);
+			FilesCopyBuilder builder = new FilesCopyBuilder();
+			Copy copy = builder.build(BUFFER_COPY, args);
 			copy.copyRun();
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
-		
 	}
 }

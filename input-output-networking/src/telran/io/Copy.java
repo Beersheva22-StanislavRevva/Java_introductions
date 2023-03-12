@@ -1,44 +1,50 @@
 package telran.io;
 
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
-public abstract class Copy  {
-	String srcFilePass;
-	String destFilePass;
-	boolean overwrite;
+abstract public class Copy {
+	protected String srcFilePath;
+	protected String destFilePath;
+	protected boolean overwrite;
 	
-	public Copy (String srcFilePass,String destFilePass, boolean overwrite) {
-	this.srcFilePass = srcFilePass;
-	this.destFilePass = destFilePass;
-	this.overwrite = overwrite;
+	public Copy(String srcFilePath, String destFilePath, boolean overwrite) {
+		this.srcFilePath = srcFilePath;
+		this.destFilePath = destFilePath;
+		this.overwrite = overwrite;
 	}
 	
-	abstract long copy();
+	abstract public long copy();
 	
 	abstract DisplayResult getDisplayResult(long copyTime, long fileSize);
 	
-	void copyRun() {
+	public void copyRun() {
 		try {
-			isAlowedToCopy();
+			canOverwrite();
+			sourceExists();
+			Instant timestamp = Instant.now();
+			long size = copy();
+			ChronoUnit unit = ChronoUnit.MILLIS;
+			DisplayResult displayResult = getDisplayResult(unit.between(timestamp, Instant.now()),
+					size);
+			System.out.println(displayResult);
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
-		long copyTime;
-		long fileSize = 0;
-		long start = System.nanoTime();
-		fileSize = copy();
-		copyTime = System.nanoTime() - start;
-		String res = getDisplayResult(copyTime, fileSize).toString();
-		System.out.println(res);
 	}
-
-	private void isAlowedToCopy() throws Exception {
-		if (Files.exists(Path.of(destFilePass)) && !overwrite) {
-			throw new Exception (destFilePass +  " - not allowed to overwrite file");
+	private void sourceExists() throws Exception {
+		if(!Files.exists(Path.of(srcFilePath))) {
+			throw new Exception(srcFilePath + " not found");
 		}
 		
+	}
+
+	private void canOverwrite() throws Exception  {
+		if (overwrite && Files.exists(Path.of(destFilePath))) {
+			throw new Exception(destFilePath + " cannot be overwritten");
+		}
 	}
 	
 	
