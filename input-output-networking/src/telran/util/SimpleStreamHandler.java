@@ -16,7 +16,6 @@ public class SimpleStreamHandler implements Handler {
 	@Override
 	public void publish(LoggerRecord loggerRecord) {
 		stream.printf("%s	%s	%s 	%s 	%s \n",loggerRecord.timestamp, loggerRecord.zoneid, loggerRecord.level, loggerRecord.loggerName, loggerRecord.message);
-		//stream.close();
-		
+				
 	}
 }
