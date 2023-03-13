@@ -5,13 +5,15 @@ import java.time.*;
 
 public class LoggerRecord {
 	
-	Level level = null;
-	String loggerName = "";
-	String message = "";
+	Level level;
+	String loggerName;
+	String message;
+	Instant timestamp;
+	String zoneid;
 
 	public LoggerRecord (Level level, String loggerName, String message) {
-		Instant timestamp = Instant.now(); 
-		String zoneid = ZoneId.systemDefault().toString();
+		this.timestamp = Instant.now(); 
+		this.zoneid = ZoneId.systemDefault().toString();
 		this.level = level;
 		this.loggerName = loggerName;
 		this.message = message;

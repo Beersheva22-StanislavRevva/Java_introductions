@@ -13,7 +13,6 @@ public class Logger implements Handler {
 	public Logger (Handler handler, String name)	{
 	this.handler = handler;
 	this.name = name;
-	this.message = handler.toString();
 	}
 	
 	public void setLevel (Level level) {
@@ -21,38 +20,43 @@ public class Logger implements Handler {
 	}
 	
 	public void error (String message) {
-		setLevel(Level.ERROR);
-		LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-		publish(loggerRecord);
+		if (this.level.compareTo(Level.ERROR) <= 0) {
+			LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
+			publish(loggerRecord);
+		}
 	}
 	
 	public void warn (String message) {
-		setLevel(Level.WARNING);
+		if (this.level.compareTo(Level.WARNING) <= 0) {
 		LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-		publish(loggerRecord);	
+		publish(loggerRecord);
+		}
 	}
 	
 	public void info (String message) {
-		setLevel(Level.INFO);
+		if (this.level.compareTo(Level.INFO) <= 0) {
 		LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-		publish(loggerRecord);	
+		publish(loggerRecord);
+		}
 	}
 	
 	public void debug (String message) {
-		setLevel(Level.DEBUG);
+		if (this.level.compareTo(Level.DEBUG) <= 0) {
 		LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-		publish(loggerRecord);	
+		publish(loggerRecord);
+		}
 	}
 	
 	public void trace (String message) {
-		setLevel(Level.TRACE);
+		if (this.level.compareTo(Level.TRACE) <= 0) {
 		LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-		publish(loggerRecord);	
+		publish(loggerRecord);
+		}
 	}
 	
 	@Override
 	public void publish(LoggerRecord loggerRecord) {
-		// TODO Auto-generated method stub
+		handler.publish(loggerRecord);
 		
 	}
 	
