@@ -1,65 +1,47 @@
 package telran.util;
 
-import java.lang.System.Logger.*;
+import java.time.Instant;
+import java.time.ZoneId;
 
-public class Logger implements Handler {
-	
-	
-	Level level;
-	Handler handler;
-	String name;
-	String message;
-	
-	public Logger (Handler handler, String name)	{
+public class Logger {
+private Level level = Level.INFO;
+private Handler handler;
+private String name;
+public Logger(Handler handler, String name) {
 	this.handler = handler;
 	this.name = name;
-	}
-	
-	public void setLevel (Level level) {
-		this.level = level;
-	}
-	
-	public void error (String message) {
-		if (this.level.compareTo(Level.ERROR) <= 0) {
-			LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-			publish(loggerRecord);
-		}
-	}
-	
-	public void warn (String message) {
-		if (this.level.compareTo(Level.WARNING) <= 0) {
-		LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-		publish(loggerRecord);
-		}
-	}
-	
-	public void info (String message) {
-		if (this.level.compareTo(Level.INFO) <= 0) {
-		LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-		publish(loggerRecord);
-		}
-	}
-	
-	public void debug (String message) {
-		if (this.level.compareTo(Level.DEBUG) <= 0) {
-		LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-		publish(loggerRecord);
-		}
-	}
-	
-	public void trace (String message) {
-		if (this.level.compareTo(Level.TRACE) <= 0) {
-		LoggerRecord loggerRecord = new LoggerRecord (level, name, message);
-		publish(loggerRecord);
-		}
-	}
-	
-	@Override
-	public void publish(LoggerRecord loggerRecord) {
+}
+private LoggerRecord createLoggerRecord(String message, Level level) {
+	return new LoggerRecord(Instant.now(), ZoneId.systemDefault().toString(),
+			level, name, message);
+}
+public void setLevel(Level level) {
+	this.level = level;
+}
+private void publising(String message, Level level) {
+	if (this.level.compareTo(level) <= 0) {
+		LoggerRecord loggerRecord = createLoggerRecord(message, level);
 		handler.publish(loggerRecord);
-		
 	}
+}
+public void error(String message) {
+	publising(message, Level.ERROR);
 	
+}
+public void warn(String message) {
+	publising(message, Level.WARN);
 	
+}
 
+public void info(String message) {
+	publising(message, Level.INFO);
+	
+}
+public void debug(String message) {
+	publising(message, Level.DEBUG);
+	
+}
+public void trace(String message) {
+	publising(message, Level.TRACE);
+}
 }

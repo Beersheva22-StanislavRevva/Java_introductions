@@ -3,72 +3,116 @@ package telran.employees.test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Arrays;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import telran.employees.*;
-
-
-class CompanyImplTest {
-
-	Employee employee1 = new Employee (121, "John", LocalDate.of(1981, 1, 1), "department1", 11000);
-	Employee employee2 = new Employee (122, "Jack", LocalDate.of(1982, 2, 2), "department2", 12000);
-	Employee employee3 = new Employee (123, "Jim", LocalDate.of(1983, 3, 3), "department3", 13000);
-	Employee employee4 = new Employee (124, "Jake", LocalDate.of(1984, 4, 4), "department4", 14000);
-	
-	
-	CompanyImpl createCompanyImpl () {
-	CompanyImpl companyImpl = new CompanyImpl();
-	companyImpl.addEmployee(employee1);
-	companyImpl.addEmployee(employee2);
-	companyImpl.addEmployee(employee3);
-	companyImpl.addEmployee(employee4);
-	return companyImpl;
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class CompanyTest {
+private static final long ID1 = 123;
+private static final int MONTH1 = 1;
+private static final String DEPARTMENT1 = "department1";
+private static final int SALARY1 = 1000;
+private static final long ID2 = 124;
+private static final String DEPARTMENT2 = "department2";
+private static final int SALARY2 = 2000;
+private static final LocalDate BIRTH2 = LocalDate.of(2000, MONTH1, 1);
+private static final int MONTH2 = 2;
+private static final int SALARY3 = 3000;
+private static final long ID3 = 125;
+private static final int SALARY4 = 4000;
+private static final long ID4 = 126;
+private static final long ID10 = 100000;
+private static final String FILE_NAME = "test.data";
+Employee empl1 = new Employee(ID1, "name", LocalDate.of(2000, MONTH1, 1), DEPARTMENT1, SALARY1);
+Employee empl2 = new Employee(ID2, "name", LocalDate.of(2000, MONTH1, 1), DEPARTMENT2, SALARY2);
+Employee empl3 = new Employee(ID3, "name", LocalDate.of(2000, MONTH2, 1), DEPARTMENT1, SALARY3);
+Employee empl4 = new Employee(ID4, "name", LocalDate.of(2000, MONTH1, 1), DEPARTMENT2, SALARY4);
+Employee[] employees = {empl1, empl2, empl3, empl4};
+Company company;
+	@BeforeEach
+	void setUp() throws Exception {
+		company = new CompanyImpl();
+		for(Employee empl: employees) {
+			company.addEmployee(empl);
+		}
 	}
-	
-	
+
 	@Test
-	void getAllEmployeesTest() {
-		CompanyImpl companyImpl = createCompanyImpl();
-		List<Employee> list = companyImpl.getAllEmployees();
-		assertEquals(employee1, list.get(0));
-		assertEquals(employee4, list.get(3));
+	void addEmployeeTest() {
+		Employee newEmployee = new Employee(ID10, DEPARTMENT2, BIRTH2, DEPARTMENT1, SALARY1);
+		assertTrue(company.addEmployee(newEmployee));
+		assertFalse(company.addEmployee(newEmployee));
 	}
-	
 	@Test
 	void removeEmployeeTest() {
-		CompanyImpl companyImpl = createCompanyImpl();
-		companyImpl.removeEmployee(121);
-		companyImpl.removeEmployee(122);
-		companyImpl.removeEmployee(123);
-		companyImpl.removeEmployee(124);
-		assertEquals(0, companyImpl.getAllEmployees().size());
+		assertEquals(empl1, company.removeEmployee(ID1));
+		assertNull(company.removeEmployee(ID1));
+		runTest(new Employee[] {empl2, empl3, empl4});
+		
+	}
+	@Test
+	void employeesByMonthTest() {
+		assertTrue(company.getEmployeesByMonthBirth(20).isEmpty());
+		Employee[] expected = {empl1, empl2, empl4};
+		Employee[] actual = company.getEmployeesByMonthBirth(MONTH1).toArray(Employee[]::new);
+		Arrays.sort(actual);
+		assertArrayEquals(expected, actual);
+		company.removeEmployee(ID1);
+		company.removeEmployee(ID2);
+		company.removeEmployee(ID4);
+		assertTrue(company.getEmployeesByMonthBirth(MONTH1).isEmpty());
+	}
+	@Test
+	void employeesByDepartmentTest() {
+		assertTrue(company.getEmployeesByDepartment("gggggg").isEmpty());
+		Employee[] expected = {empl2, empl4};
+		Employee[] actual = company.getEmployeesByDepartment(DEPARTMENT2).toArray(Employee[]::new);
+		Arrays.sort(actual);
+		assertArrayEquals(expected, actual);
+		company.removeEmployee(ID2);
+		company.removeEmployee(ID4);
+		assertTrue(company.getEmployeesByDepartment(DEPARTMENT2).isEmpty());
+		
+	}
+	@Test
+	void employeesBySalaryTest() {
+		assertTrue(company.getEmployeesBySalary(100000000,100000100).isEmpty());
+		Employee[] expected = {empl1, empl2, empl3};
+		Employee[] actual = company.getEmployeesBySalary(SALARY1, SALARY3).toArray(Employee[]::new);
+		Arrays.sort(actual);
+		assertArrayEquals(expected, actual);
+		company.removeEmployee(ID1);
+		company.removeEmployee(ID2);
+		company.removeEmployee(ID3);
+		assertTrue(company.getEmployeesBySalary(SALARY1, SALARY3).isEmpty());
 	}
 
-	@Test
-	void getByMonthDepartmentSalaryTest() {
-		CompanyImpl companyImpl = createCompanyImpl();
-		assertEquals(employee4, companyImpl.getEmployee(124));
-		assertEquals(employee1, companyImpl.getEmployeesByMonthBirth(1).get(0));
-		assertEquals(employee2, companyImpl.getEmployeesByDepartment("department2").get(0));
-		assertTrue(companyImpl.getEmployeesBySalary(11500, 13500).contains(employee2));
-		assertFalse(companyImpl.getEmployeesBySalary(11500, 13500).contains(employee4));
-				
+	private void runTest(Employee[] expected) {
+		Employee[]actual = company.getAllEmployees().toArray(Employee[]::new);
+		Arrays.sort(actual);
+		assertArrayEquals(expected, actual);
+		
 	}
 	
 	@Test
+	@Order(1)
 	void saveTest() {
-		CompanyImpl companyImpl = createCompanyImpl();
-		companyImpl.save("companyImpl.txt");
-		companyImpl.removeEmployee(121);
-		companyImpl.removeEmployee(122);
-		companyImpl.removeEmployee(123);
-		companyImpl.removeEmployee(124);
-		companyImpl.restore("companyImpl.txt");
-		assertEquals("John",companyImpl.getEmployee(121).getName());
-		assertEquals(14000 ,companyImpl.getEmployee(124).getSalary());
+		company.save(FILE_NAME);
+	}
+	@Test
+	@Order(2)
+	void restoreTest() {
+		Company company2 = new CompanyImpl();
+		company2.restore(FILE_NAME);
+		assertIterableEquals(company, company2);
 	}
 	
-}
+	
 
+}

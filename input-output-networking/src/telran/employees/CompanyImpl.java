@@ -1,99 +1,114 @@
 package telran.employees;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.*;
-
+import java.io.*;
 
 public class CompanyImpl implements Company {
-	
-	List<Employee> employeeList = new ArrayList<Employee>();
-	private static final long serialVersionUID = 1L;
-	
-	/*public CompanyImpl (List<Employee> employeeList) {
-	 this.employeeList = employeeList;
-	}*/
-		
 
+	
+	private static final long serialVersionUID = 1L;
+	private HashMap<Long, Employee> employees = new HashMap<>();
+	private HashMap<Integer, Set<Employee>> employeesMonth = new HashMap<>();
+	private HashMap<String, Set<Employee>> employeesDepartment = new HashMap<>();
+	private TreeMap<Integer, Set<Employee>> employeesSalary = new TreeMap<>();
+	
 	@Override
 	public Iterator<Employee> iterator() {
-	
-		return employeeList.listIterator();
+		
+		return getAllEmployees().iterator();
 	}
 
 	@Override
 	public boolean addEmployee(Employee empl) {
-		return employeeList.add(empl);
+		boolean res = false;
+		if (employees.putIfAbsent(empl.id, empl) == null) {
+			res = true;
+			addIndexMap(employeesMonth, empl.getBirthDate().getMonthValue(), empl);
+			addIndexMap(employeesDepartment, empl.getDepartment(), empl);
+			addIndexMap(employeesSalary, empl.getSalary(), empl);
+		}
+		
+		return res;
+	}
+
+	private <T> void addIndexMap(Map<T, Set<Employee>> map, T key, Employee empl) {
+		map.computeIfAbsent(key, k->new HashSet<>()).add(empl);
+		
 	}
 
 	@Override
 	public Employee removeEmployee(long id) {
-		Employee empl = getEmployee(id);
-		employeeList.remove(empl);
-		
+		Employee empl = employees.remove(id); 
+		if (empl != null) {
+			removeIndexMap(employeesMonth, empl.getBirthDate().getMonthValue(), empl);
+			removeIndexMap(employeesDepartment, empl.getDepartment(), empl);
+			removeIndexMap(employeesSalary, empl.getSalary(), empl);
+		}
 		return empl;
+	}
+
+	private <T>void removeIndexMap(Map<T, Set<Employee>> map, T key, Employee empl) {
+		Set<Employee> set = map.get(key);
+		set.remove(empl);
+		if (set.isEmpty()) {
+			map.remove(key);
+		}
+		
 	}
 
 	@Override
 	public List<Employee> getAllEmployees() {
-	 
-		return employeeList.stream().toList();
+		
+		return new ArrayList<>(employees.values());
 	}
 
 	@Override
 	public List<Employee> getEmployeesByMonthBirth(int month) {
 		
-		return (employeeList.stream().filter(n -> n.getBirthDate().getMonthValue() == month).toList());
+		return new ArrayList<>(employeesMonth.getOrDefault(month, Collections.emptySet()));
 	}
 
 	@Override
 	public List<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo) {
-		return (employeeList.stream().filter(n -> n.salary >= salaryFrom).filter(n -> n.salary <= salaryTo).toList());
 		
+		return employeesSalary.subMap(salaryFrom, true, salaryTo, true)
+				.values().stream().flatMap(Set::stream).toList();
 	}
 
 	@Override
 	public List<Employee> getEmployeesByDepartment(String department) {
-		return (employeeList.stream().filter(n -> n.getDepartment().equalsIgnoreCase(department)).toList());
+		
+		return new ArrayList<>(employeesDepartment.getOrDefault(department, Collections.emptySet()));
 	}
 
 	@Override
 	public Employee getEmployee(long id) {
-		List<Employee> tmp = employeeList.stream().filter(n -> n.getId() == id).toList();
-				
-		return tmp != null?	tmp.get(0) : null;
-		 
+		
+		return employees.get(id);
 	}
 
 	@Override
 	public void save(String pathName) {
-		try {
-			writeObject(pathName);
-		} catch (Exception e) {
-			e.printStackTrace();
+		try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(pathName))){
+			output.writeObject(getAllEmployees());
+		} catch(Exception e) {
+			throw new RuntimeException(e.toString()); //some error
 		}
+
 	}
 
-	private void writeObject(String pathName) throws Exception {
-		try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(pathName))) {
-			output.writeObject(this);
-		} 
-	}
-	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void restore(String pathName) {
-		CompanyImpl companyImpl = null;
-		try(ObjectInputStream input = new ObjectInputStream(new FileInputStream(pathName))) {
-			companyImpl = (CompanyImpl) input.readObject();
+		try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(pathName))) {
+			List<Employee> allEmployees = (List<Employee>) input.readObject();
+			allEmployees.forEach(this::addEmployee);
+		}catch(FileNotFoundException e) {
+			//empty object but no error
 		} catch (Exception e) {
+			throw new RuntimeException(e.toString()); //some error
 		}
-		for (Employee e : companyImpl) {
-			addEmployee(e);
-		}
-		
+
 	}
-	
 
 }
