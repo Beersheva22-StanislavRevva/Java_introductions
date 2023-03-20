@@ -44,4 +44,8 @@ public void debug(String message) {
 public void trace(String message) {
 	publising(message, Level.TRACE);
 }
+
+public void requestCounter(String level) {
+handler.requestCounter(level);
+}
 }
