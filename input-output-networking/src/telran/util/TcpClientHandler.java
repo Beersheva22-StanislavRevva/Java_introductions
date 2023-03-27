@@ -1,45 +1,57 @@
 package telran.util;
-
 import java.io.*;
 import java.net.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-public class TcpClientHandler implements Handler {
-String HOSTNAME;
-int PORT;
-Socket socket;
-PrintStream output;
-BufferedReader input;
+import telran.net.application.ServerLogAppl;
 
-public TcpClientHandler(Socket socket, PrintStream output, BufferedReader input) throws Exception {
-	super();
-	this.socket = socket;
-	this.output = output; // new PrintStream(socket.getOutputStream());
-	this.input = input;// new BufferedReader(new InputStreamReader(socket.getInputStream()));
-}
+
+public class TcpClientHandler implements Handler {
+	private static final String LOG_TYPE_REQUEST = "log";
+	private static final String OK = "ok";
+	Socket socket;
+	PrintStream stream;
+	BufferedReader input;
+	public TcpClientHandler(String hostName, int port) {
+		
+		try {
+			socket = new Socket(hostName, port);
+			stream = new PrintStream(socket.getOutputStream());
+			input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		} catch (IOException e) {
+			throw new RuntimeException(e.toString());
+		}
+	}
+
+	
 
 	@Override
-	public void publish(LoggerRecord loggerRecord)  {
+	public void publish(LoggerRecord loggerRecord) {
 		LocalDateTime ldt = LocalDateTime.ofInstant(loggerRecord.timestamp,
-		ZoneId.of(loggerRecord.zoneId));
-		output.printf("log#%s %s %s %s", ldt, loggerRecord.level,
+				ZoneId.of(loggerRecord.zoneId));
+		String message = String.format("%s %s %s %s", ldt, loggerRecord.level,
 				loggerRecord.loggerName, loggerRecord.message);
+		stream.println(ServerLogAppl.LOG_TYPE + "#" + message);
+		try {
+			String response = input.readLine();
+			if (!response.equals(ServerLogAppl.OK)) {
+				throw new RuntimeException("Response from Logger Server is " + response);
+			}
+		} catch (IOException e) {
+			new RuntimeException(e.getMessage());
+		}
+		
+		
 	}
-	
 	@Override
 	public void close() {
 		try {
 			socket.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new RuntimeException("not closed " + e.getMessage());
 		}
 	}
 	
-	@Override
-	public void requestCounter(String level) {
-		output.printf("counter#%s\n",level);
-		
-	}
 
 }

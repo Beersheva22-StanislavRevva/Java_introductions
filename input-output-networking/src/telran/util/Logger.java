@@ -46,6 +46,6 @@ public void trace(String message) {
 }
 
 public void requestCounter(String level) {
-handler.requestCounter(level);
+((Logger) handler).requestCounter(level);
 }
 }
