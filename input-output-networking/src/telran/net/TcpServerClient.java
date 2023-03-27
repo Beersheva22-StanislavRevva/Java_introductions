@@ -1,8 +1,7 @@
 package telran.net;
 import java.io.*;
 import java.net.*;
-
-public class TcpServerClient implements Runnable {
+public class TcpServerClient implements Runnable{
 private Socket socket;
 private ObjectInputStream input;
 private ObjectOutputStream output;
@@ -12,27 +11,25 @@ public TcpServerClient(Socket socket, Protocol protocol) throws IOException {
 	this.socket = socket;
 	input = new ObjectInputStream(socket.getInputStream());
 	output = new ObjectOutputStream(socket.getOutputStream());
+	
 }
-
 	@Override
 	public void run() {
-		while (true) {
+		boolean running = true;
+		while(running) {
 			try {
 				Request request = (Request) input.readObject();
-				if (request == null) {
-					break;
-				}
 				Response response = protocol.getResponse(request);
 				output.writeObject(response);
-				} catch (EOFException e) {
-					System.out.println("client closed connection");
-				} catch (Exception e) {
-					throw new RuntimeException(e.toString());
-				}
-					
-			
+			} catch (EOFException e) {
+				System.out.println("client closed connection");
+				running = false;
+			} catch (Exception e)  {
+				throw new RuntimeException(e.toString());
+				
+			}
 		}
-
+		
 	}
 
 }
