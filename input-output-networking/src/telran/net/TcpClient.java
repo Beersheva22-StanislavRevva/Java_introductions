@@ -23,6 +23,7 @@ public TcpClient(String hostname, int port) throws Exception{
 		Request request = new Request(type, requestData);
 		T res = null;
 		try {
+			
 			output.writeObject(request);
 			Response response = (Response) input.readObject();
 			if(response.code != ResponseCode.OK) {
