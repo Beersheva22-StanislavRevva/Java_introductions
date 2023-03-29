@@ -40,7 +40,7 @@ Company company;
 	@BeforeEach
 	void setUp() throws Exception {
 		company = new UdpClientCompanyImpl("localhost",4000);
-		
+		company.forEach(n -> company.removeEmployee((n.getId())));
 		for(Employee empl: employees) {
 		company.addEmployee(empl);
 		}
@@ -117,5 +117,4 @@ Company company;
 	}
 	
 	
-
 }
