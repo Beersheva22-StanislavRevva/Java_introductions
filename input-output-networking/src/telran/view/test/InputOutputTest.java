@@ -1,19 +1,14 @@
 package telran.view.test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.*;
+import telran.view.StandardInputOutput;
 
-import telran.view.InputOutput;
-import telran.view.StandartInputOutput;
-
-class InputOutputTest extends StandartInputOutput {
+class InputOutputTest extends StandardInputOutput {
 	
-	InputOutput inputOutput;
-	StandartInputOutput standartInputOutput; 
+	StandardInputOutput standartInputOutput; 
 	String errorPrompt = "Wrong value \n"; 
 
 	@Test

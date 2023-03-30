@@ -1,10 +1,8 @@
 package telran.view;
 import java.io.*;
-import java.util.*;
-
-public class StandartInputOutput implements InputOutput {
+import java.util.Scanner;
+public class StandardInputOutput implements InputOutput {
 Scanner scanner = new Scanner(System.in);
-
 	@Override
 	public String readString(String prompt) {
 		writeLine(prompt);
