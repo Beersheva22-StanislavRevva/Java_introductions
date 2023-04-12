@@ -1,7 +1,9 @@
 package telran.employees.net;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import telran.employees.Company;
 import telran.employees.Employee;
@@ -15,20 +17,28 @@ public class CompanyProtocol implements Protocol {
 	@Override
 	public Response getResponse(Request request) {
 		try {
-		return switch(request.type) {
-		case "addEmployee" -> getResponseData(addEmployee(request.data));
-		case "removeEmployee" -> getResponseData(removeEmployee(request.data));
-		case "getAllEmployees" -> getResponseData(getAllEmployees(request.data));
-		case "getEmployeesByMonthBirth" -> getResponseData(getEmployeesByMonthBirth(request.data));
-		case "getEmployeesBySalary" -> getResponseData(getEmployeesBySalary(request.data));
-		case "getEmployeesByDepartment" -> getResponseData(getEmployeesByDepartment(request.data));
-		case "getEmployee" -> getResponseData(getEmployee(request.data));
-		case "save" -> getResponseData(save(request.data));
-		case "restore" -> getResponseData(retsore(request.data));
-		default -> new Response(ResponseCode.WRONG_REQUEST, request.type + " Request type not found");
-		};
-		}catch (Throwable e) {
-			return new Response(ResponseCode.WRONG_DATA, e.toString());
+			/*return switch(request.type) {
+			case "addEmployee" -> getResponseData(addEmployee(request.data));
+			case "removeEmployee" -> getResponseData(removeEmployee(request.data));
+			case "getAllEmployees" -> getResponseData(getAllEmployees(request.data));
+			case "getEmployeesByMonthBirth" -> getResponseData(getEmployeesByMonthBirth(request.data));
+			case "getEmployeesBySalary" -> getResponseData(getEmployeesBySalary(request.data));
+			case "getEmployeesByDepartment" -> getResponseData(getEmployeesByDepartment(request.data));
+			case "getEmployee" -> getResponseData(getEmployee(request.data));
+			case "save" -> getResponseData(save(request.data));
+			case "restore" -> getResponseData(retsore(request.data));
+			default -> new Response(ResponseCode.WRONG_REQUEST, request.type + " Request type not found");
+			};
+			}catch (Throwable e) {
+				return new Response(ResponseCode.WRONG_DATA, e.toString());
+		}*/
+			Method method = CompanyProtocol.class.getDeclaredMethod(request.type, Serializable.class);
+			Serializable responseData = (Serializable) method.invoke(this, request.data);
+			return new Response (ResponseCode.OK,responseData);
+		} catch (NoSuchElementException e) {
+			return new Response (ResponseCode.WRONG_REQUEST, e.toString());
+		} catch (Exception e) {
+			return new Response (ResponseCode.WRONG_DATA, e.toString());
 		}
 	}
 	private Response getResponseData(Serializable data) {

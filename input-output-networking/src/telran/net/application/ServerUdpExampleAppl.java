@@ -4,12 +4,12 @@ import java.net.*;
 
 import telran.net.TcpServer;
 import telran.net.UdpServer;
-public class ServerTcpExampleAppl {
+public class ServerUdpExampleAppl {
 
 	private static final int PORT = 4000;
 
 	public static void main(String[] args) throws Exception{
-		TcpServer server = new TcpServer(new ExampleProtocol(), PORT);
+		UdpServer server = new UdpServer(PORT, new ExampleProtocol());
 		server.run();
 }
 }
