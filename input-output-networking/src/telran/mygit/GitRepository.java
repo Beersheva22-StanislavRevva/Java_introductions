@@ -5,10 +5,10 @@ import java.nio.file.Path;
 import java.util.List;
 
 public interface GitRepository extends Serializable {
-
 	String GIT_FILE = ".mygit";
-	GitRepositoryImpl init();
 	String commit(String commitMessage);
+	
+	
 	List<FileState> info();
 	String createBranch(String branchName);
 	String renameBranch(String branchName, String newName);

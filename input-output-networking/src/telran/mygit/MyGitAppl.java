@@ -10,16 +10,7 @@ public class MyGitAppl {
 
 	public static void main (String[] args) {
 		InputOutput io = new StandardInputOutput();
-		GitRepository git = new GitRepositoryImpl();
-		/*if (Files.exists(Path.of(GitRepository.GIT_FILE))) {
-			git.init();	
-		} else { try {
-			Files.createFile(Path.of(GitRepository.GIT_FILE));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-			
-		}*/
+		GitRepositoryImpl git = GitRepositoryImpl.init();
 		git.addIgnoredFileNameExp(".mygit");
 		GitControlItems gitControlItems = new GitControlItems(git);
 		Menu menu = gitControlItems.getMenu();

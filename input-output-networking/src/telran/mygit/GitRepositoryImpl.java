@@ -23,23 +23,27 @@ import org.junit.platform.engine.support.descriptor.FileSource;
 public class GitRepositoryImpl implements GitRepository {
 
 	private static final long serialVersionUID = 1L;
-	private static String FOLDER = "C:\\Users\\revva\\git\\input-output-networking\\input-output-networking\\src\\telran\\mygit";
-	private static String GITFILE = "C:\\Users\\revva\\git\\input-output-networking\\input-output-networking\\src\\telran\\mygit\\.mygit";
+	private static String FOLDER = "C:\\Users\\revva\\git\\input-output-networking\\input-output-networking\\src\\telran\\mygit\\mygitfolder";
+	private static String GITFILE = "C:\\Users\\revva\\git\\input-output-networking\\input-output-networking\\src\\telran\\mygit\\\\mygitfolder\\.mygit";
 	
 	HashMap<String,Commit> commits = new HashMap<String,Commit>();
 	HashMap<String,String> branches = new HashMap<String,String>();
 	File folder = new File(FOLDER);
 	String head;
-	List<String> gitIgnore;
+	List<String> gitIgnore = new ArrayList<String>();
 	
 	
-	public GitRepositoryImpl init() {
-		try {
-			ObjectInputStream input = new ObjectInputStream(new FileInputStream(new File (GITFILE)));
-			return (GitRepositoryImpl) input.readObject();
-		} catch (Exception e) {
-			throw new RuntimeException(); 
+	public static GitRepositoryImpl init() {
+		GitRepositoryImpl git = new GitRepositoryImpl();
+		if (Files.exists(Path.of(GITFILE))) {
+			try {
+				ObjectInputStream input = new ObjectInputStream(new FileInputStream(new File (GITFILE)));
+				git = (GitRepositoryImpl) input.readObject();
+				} catch (Exception e) {
+				throw new RuntimeException(); 
+				}
 		}
+		return git;
 				
 	}
 
@@ -51,7 +55,10 @@ public class GitRepositoryImpl implements GitRepository {
 		}
 		String commitName = generateCommitName();
 		String prevCommit = branches.get(head);
-		HashMap<String, FileStorage> files = (HashMap<String, FileStorage>) Map.copyOf(commits.get(prevCommit).getFiles());
+		HashMap<String, FileStorage> files = new HashMap<String, FileStorage>();
+		if (prevCommit != null) {  
+		files = (HashMap<String, FileStorage>) Map.copyOf(commits.get(prevCommit).getFiles());
+		}
 		boolean isChanged = false;
 		
 		List<FileState> info = info();
@@ -106,10 +113,8 @@ public class GitRepositoryImpl implements GitRepository {
 
 	@Override
 	public List<FileState> info() {
-		List<FileState> info = new ArrayList<>();
-		/*if (head == null) {
-			return null;
-		}*/
+		List<FileState> info = new ArrayList<FileState>();
+		
 		Commit commit = commits.get(branches.get(head));
 		for (File f : folder.listFiles()) {
 			if (checkFileProperties(f)) {
@@ -127,12 +132,14 @@ public class GitRepositoryImpl implements GitRepository {
 
 	private FileStatus getFileStatus(File f, Commit commit) {
 		FileStatus fileStatus = FileStatus.UNTRACKED;
-		FileStorage fileStorage = commit.files.get(f.getAbsolutePath());
-		if (fileStorage != null) {
-			if (f.lastModified() == fileStorage.getDate()) {
+		if (commit != null) {
+			FileStorage fileStorage = commit.files.get(f.getAbsolutePath());
+			if (fileStorage != null) {
+				if (f.lastModified() == fileStorage.getDate()) {
 					fileStatus = FileStatus.COMMITTED;
-			} else {
-				fileStatus = FileStatus.MODIFIED;
+				} else {
+					fileStatus = FileStatus.MODIFIED;
+				}
 			}
 		}
 		return fileStatus;

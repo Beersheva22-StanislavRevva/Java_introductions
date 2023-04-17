@@ -18,6 +18,11 @@ public class FileState {
 	public FileStatus getFileStatus() {
 		return fileStatus;
 	}
+	
+	public String toString () {
+		return String.format(filePath + "  " + fileStatus.toString());
+		
+	}
 
 	
 }
