@@ -2,33 +2,42 @@ package telran.employees;
 
 import java.util.*;
 import java.util.concurrent.locks.*;
+import java.util.stream.IntStream;
 import java.io.*;
 
 public class CompanyImpl implements Company {
 
-	
+	private static enum LockType {READ, WRITE}
 	private static final long serialVersionUID = 1L;
+	private static final int N_RESOURCES = 4;
+	private static final int EMPLOYEES_INDEX = 0;
+	private static final int EMPLOYEES_DEPARTMENT_INDEX = 1;
+	private static final int EMPLOYEES_MONTH_INDEX = 2;
+	private static final int EMPLOYEES_SALARY_INDEX = 3;
 	private HashMap<Long, Employee> employees = new HashMap<>();
 	private HashMap<Integer, Set<Employee>> employeesMonth = new HashMap<>();
 	private HashMap<String, Set<Employee>> employeesDepartment = new HashMap<>();
 	private TreeMap<Integer, Set<Employee>> employeesSalary = new TreeMap<>();
 	
-	private final ReadWriteLock employeesLock = new ReentrantReadWriteLock();
-	Lock writeEmployeesLock = employeesLock.writeLock();
-	Lock readEmployeesLock = employeesLock.readLock();
-
-	private final ReadWriteLock employeesMonthLock = new ReentrantReadWriteLock();
-	Lock writeEmployeesMonthLock = employeesMonthLock.writeLock();
-	Lock readEmployeesMonthLock = employeesMonthLock.readLock();
-
-	private final ReadWriteLock employeesDepartmentLock = new ReentrantReadWriteLock();
-	Lock writeEmployeesDepartmentLock = employeesDepartmentLock.writeLock();
-	Lock readEmployeesDepartmentLock = employeesDepartmentLock.readLock();
-
-	private final ReadWriteLock employeesSalaryLock = new ReentrantReadWriteLock();
-	Lock writeEmployeesSalaryLock = employeesSalaryLock.writeLock();
-	Lock readEmployeesSalaryLock = employeesSalaryLock.readLock();
+	private ReentrantReadWriteLock[] rwLocks =
+			IntStream.range(0, N_RESOURCES).mapToObj(i -> new ReentrantReadWriteLock())
+			.toArray(ReentrantReadWriteLock[]::new);
+			
 	
+	private Lock[] readLocks =
+			Arrays.stream(rwLocks).map(ReentrantReadWriteLock::readLock)
+			.toArray(Lock[]::new);
+	private Lock[] writeLocks =
+			Arrays.stream(rwLocks).map(ReentrantReadWriteLock::writeLock)
+			.toArray(Lock[]::new);
+	private void lock(LockType type, int ... indexes) {
+		Lock[] locks = type == LockType.READ ? readLocks : writeLocks;
+		Arrays.stream(indexes).sorted().forEach(i -> locks[i].lock());
+	}
+	private void unlock(LockType type, int ... indexes) {
+		Lock[] locks = type == LockType.READ ? readLocks : writeLocks;
+		Arrays.stream(indexes).sorted().forEach(i -> locks[i].unlock());
+	}
 	@Override
 	public Iterator<Employee> iterator() {
 		
@@ -37,7 +46,8 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public boolean addEmployee(Employee empl) {
-		lock(writeEmployeesLock, writeEmployeesMonthLock, writeEmployeesDepartmentLock, writeEmployeesSalaryLock);
+		int[] indexes = IntStream.range(0, N_RESOURCES).toArray();
+		lock(LockType.WRITE, indexes);
 		try {
 			boolean res = false;
 			if (employees.putIfAbsent(empl.id, empl) == null) {
@@ -46,12 +56,10 @@ public class CompanyImpl implements Company {
 				addIndexMap(employeesDepartment, empl.getDepartment(), empl);
 				addIndexMap(employeesSalary, empl.getSalary(), empl);
 			}
-
 			return res;
 		} finally {
-			unlock(writeEmployeesLock, writeEmployeesMonthLock, writeEmployeesDepartmentLock, writeEmployeesSalaryLock);
+			unlock(LockType.WRITE, indexes);
 		}
-
 	}
 
 	private <T> void addIndexMap(Map<T, Set<Employee>> map, T key, Employee empl) {
@@ -61,8 +69,9 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public Employee removeEmployee(long id) {
+		int[] indexes = IntStream.range(0, N_RESOURCES).toArray();
+		lock(LockType.WRITE, indexes);
 		try {
-			lock(writeEmployeesLock, writeEmployeesMonthLock, writeEmployeesDepartmentLock, writeEmployeesSalaryLock);
 			Employee empl = employees.remove(id);
 			if (empl != null) {
 				removeIndexMap(employeesMonth, empl.getBirthDate().getMonthValue(), empl);
@@ -71,7 +80,7 @@ public class CompanyImpl implements Company {
 			}
 			return empl;
 		} finally {
-			unlock(writeEmployeesLock, writeEmployeesMonthLock, writeEmployeesDepartmentLock, writeEmployeesSalaryLock);
+			unlock(LockType.WRITE, indexes);
 		}
 	}
 
@@ -86,52 +95,56 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<Employee> getAllEmployees() {
+		lock(LockType.READ, EMPLOYEES_INDEX);
+		
 		try {
-			lock(readEmployeesLock);
 			return new ArrayList<>(employees.values());
 		} finally {
-			unlock(readEmployeesLock);
+			unlock(LockType.READ, EMPLOYEES_INDEX);
 		}
 	}
 
 	@Override
 	public List<Employee> getEmployeesByMonthBirth(int month) {
+		
+		lock(LockType.READ, EMPLOYEES_MONTH_INDEX);
+		
 		try {
-			lock(readEmployeesMonthLock);
 			return new ArrayList<>(employeesMonth.getOrDefault(month, Collections.emptySet()));
-		} finally {
-			unlock(readEmployeesMonthLock);
+		}finally {
+			unlock(LockType.READ, EMPLOYEES_MONTH_INDEX);
 		}
+		
 	}
 
 	@Override
 	public List<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo) {
+		lock(LockType.READ, EMPLOYEES_SALARY_INDEX);
 		try {
-			lock(readEmployeesSalaryLock);
 			return employeesSalary.subMap(salaryFrom, true, salaryTo, true).values().stream().flatMap(Set::stream)
 					.toList();
 		} finally {
-			unlock(readEmployeesMonthLock);
+			unlock(LockType.READ, EMPLOYEES_SALARY_INDEX);
 		}
 	}
 
 	@Override
 	public List<Employee> getEmployeesByDepartment(String department) {
+		lock(LockType.READ, EMPLOYEES_DEPARTMENT_INDEX);
 		try {
-			lock(readEmployeesDepartmentLock);
 			return new ArrayList<>(employeesDepartment.getOrDefault(department, Collections.emptySet()));
 		} finally {
-			unlock(readEmployeesDepartmentLock);
+			unlock(LockType.READ, EMPLOYEES_DEPARTMENT_INDEX);
 		}
 	}
 
 	@Override
 	public Employee getEmployee(long id) {
+		lock(LockType.READ, EMPLOYEES_INDEX);
 		try {
-			lock(readEmployeesLock);
 			return employees.get(id);
 		} finally {
-			unlock(readEmployeesLock);
+			unlock(LockType.READ, EMPLOYEES_INDEX);
 		}
 	}
 
@@ -160,40 +173,42 @@ public class CompanyImpl implements Company {
 	}
 
 	@Override
-	public void updateSalary(long empId, int newSalary) {
-		try {
-			lock(readEmployeesLock, writeEmployeesSalaryLock);
-		Employee employee = employees.get(empId);
-		employee.setSalary(newSalary);
-		removeIndexMap(employeesSalary, employee.getSalary(), employee);
-		addIndexMap(employeesSalary, newSalary, employee);
-		} finally {
-			unlock(readEmployeesLock, writeEmployeesSalaryLock);
-		}
-		}
+	public void updateSalary(long emplId, int newSalary) {
+		
+			lock(LockType.READ, EMPLOYEES_INDEX);
+			lock(LockType.WRITE, EMPLOYEES_SALARY_INDEX);
+			try {
+				Employee empl = employees.get(emplId);
+				if (empl != null) {
+				removeIndexMap(employeesSalary, empl.salary, empl);
+				empl.salary = newSalary;
+				addIndexMap(employeesSalary, newSalary, empl);
+				}
+			} finally {
+				unlock(LockType.READ, EMPLOYEES_INDEX);
+				unlock(LockType.WRITE, EMPLOYEES_SALARY_INDEX);
+			} 
+		
+		
+	}
 
 	@Override
-	public void updateDepartment(long empId, String department) {
+	public void updateDepartment(long emplId, String department) {
+		lock(LockType.READ, EMPLOYEES_INDEX);
+		lock(LockType.WRITE, EMPLOYEES_DEPARTMENT_INDEX);
 		try {
-			lock(readEmployeesLock, writeEmployeesDepartmentLock);
-		Employee employee = employees.get(empId);
-		removeIndexMap(employeesDepartment, employee.getDepartment(), employee);
-		addIndexMap(employeesDepartment, employee.getDepartment(), employee);
+			Employee empl = employees.get(emplId);
+			if (empl != null) {
+				removeIndexMap(employeesDepartment, empl.department, empl);
+				empl.department = department;
+				addIndexMap(employeesDepartment, department, empl);
+			}
 		} finally {
-			unlock(readEmployeesLock, writeEmployeesDepartmentLock);
-		}
-	}
-	
-	private void lock(Lock...locks) {
-		for(Lock l : locks) {
-			l.lock();
+			unlock(LockType.READ, EMPLOYEES_INDEX);
+			unlock(LockType.WRITE, EMPLOYEES_DEPARTMENT_INDEX);
 		}
 		
 	}
-	private void unlock(Lock...locks) {
-		for(Lock l : locks) {
-			l.unlock();
-		}
-	}
+	
 
 }

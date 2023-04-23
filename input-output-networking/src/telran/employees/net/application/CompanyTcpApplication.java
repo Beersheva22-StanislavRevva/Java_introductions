@@ -2,7 +2,9 @@ package telran.employees.net.application;
 
 import telran.employees.Company;
 import telran.employees.CompanyImpl;
+import telran.employees.CompanyImplNoThreads;
 import telran.employees.net.CompanyProtocol;
+import telran.employees.net.CompanyProtocolSync;
 import telran.net.Protocol;
 import telran.net.TcpServer;
 
