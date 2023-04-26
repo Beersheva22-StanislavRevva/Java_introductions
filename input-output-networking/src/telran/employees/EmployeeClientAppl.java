@@ -9,13 +9,12 @@ import telran.net.TcpClient;
 import telran.view.*;
 public class EmployeeClientAppl {
 
-	private static final String FILE_PATH = "employees.data";
+	private static final String FILE_PATH = "company.data";
 
 	public static void main(String[] args) throws Exception {
 		InputOutput io = new StandardInputOutput();
 		NetworkClient client = new TcpClient("localhost", 4000);
 		Company company = new CompanyNetProxy(client);
-		company.restore(FILE_PATH);
 		Item[] companyItems = CompanyControllerItems.getCompanyItems
 				(company, new String[] {"QA", "Development", "Audit",
 						"Management", "Accounting"});

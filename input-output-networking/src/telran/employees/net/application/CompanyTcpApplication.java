@@ -1,5 +1,7 @@
 package telran.employees.net.application;
 
+import java.util.Scanner;
+
 import telran.employees.Company;
 import telran.employees.CompanyImpl;
 import telran.employees.CompanyImplNoThreads;
@@ -9,11 +11,28 @@ import telran.net.Protocol;
 import telran.net.TcpServer;
 
 public class CompanyTcpApplication {
+private static final String FILE_NAME = "company.data";
+
 public static void main(String[] args) throws Exception {
-	Company company = new CompanyImpl();
-	company.restore("company.data");
+	Company company = new CompanyImplNoThreads();
+	company.restore(FILE_NAME);
 	Protocol protocol = new CompanyProtocol(company);
 	TcpServer server = new TcpServer(protocol, 4000);
-	server.run();
+	Thread thread = new Thread(server);
+	thread.start();
+	Scanner scanner = new Scanner(System.in);
+	boolean running = true;
+	while(running ) {
+		System.out.println("for stopping server enter command 'shutdown'");
+		String line = scanner.nextLine();
+			if (line.equals("shutdown")) {
+				server.shutdown();
+				thread.join();
+				company.save(FILE_NAME);
+				System.out.println("Application CompanyTCP is closing");
+				running = false;
+			}
+			
+	}
 }
 }
